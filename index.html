@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>剑南春老酒 · 降档客户明细</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --red:#C41A1A;--red-light:#E8563A;--red-bg:rgba(196,26,26,.06);
+  --orange:#E8913A;--green:#2E8B57;--gold:#D4A017;
+  --bg:#F5F2EE;--card:#fff;--text:#2D2D2D;--text2:#666;--border:#E8E4DF;
+  --shadow:0 2px 12px rgba(0,0,0,.06);
+  --radius:12px;
+}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+.hidden{display:none!important}
+
+/* ===== LANDING ===== */
+#landing{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:linear-gradient(135deg,#1a0a0a 0%,#3d1010 40%,#5a1a1a 100%)}
+.landing-card{background:#fff;border-radius:20px;padding:48px 40px;max-width:460px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center}
+.landing-logo{width:72px;height:72px;margin:0 auto 20px;background:var(--red);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;font-weight:700}
+.landing-card h1{font-size:22px;color:var(--text);margin-bottom:6px;font-weight:700}
+.landing-card .sub{font-size:14px;color:var(--text2);margin-bottom:32px}
+.field-group{margin-bottom:20px;text-align:left}
+.field-group label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:600}
+.field-group select{width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:10px;
+  font-size:15px;color:var(--text);background:#fff;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;cursor:pointer;transition:border .2s}
+.field-group select:focus{outline:none;border-color:var(--red)}
+.btn-confirm{width:100%;padding:14px;border:none;border-radius:10px;font-size:16px;font-weight:700;
+  color:#fff;background:linear-gradient(135deg,var(--red),var(--red-light));cursor:pointer;
+  margin-top:12px;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 16px rgba(196,26,26,.3)}
+.btn-confirm:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(196,26,26,.4)}
+.btn-confirm:active{transform:translateY(0)}
+
+/* ===== DASHBOARD ===== */
+#dashboard{padding:20px;max-width:960px;margin:0 auto}
+.dash-header{text-align:center;padding:28px 16px 20px;margin-bottom:20px;
+  background:linear-gradient(135deg,#3d1010,#5a1a1a);border-radius:var(--radius);color:#fff}
+.dash-header h2{font-size:20px;font-weight:700;margin-bottom:4px}
+.dash-header .area-tag{font-size:13px;opacity:.8}
+.btn-back{position:absolute;top:16px;left:16px;background:rgba(255,255,255,.15);border:none;
+  color:#fff;padding:6px 14px;border-radius:8px;font-size:13px;cursor:pointer}
+.header-wrap{position:relative}
+
+/* Summary cards */
+.summary-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.s-card{background:var(--card);border-radius:var(--radius);padding:18px 16px;box-shadow:var(--shadow);text-align:center}
+.s-card .num{font-size:28px;font-weight:800;color:var(--red)}
+.s-card .lbl{font-size:12px;color:var(--text2);margin-top:2px}
+.s-card.green .num{color:var(--green)}
+.s-card.orange .num{color:var(--orange)}
+.s-card.gold .num{color:var(--gold)}
+
+/* Dealer selector */
+.dealer-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.dealer-bar label{font-size:14px;font-weight:600;white-space:nowrap}
+.dealer-bar select{flex:1;min-width:200px;padding:10px 14px;border:2px solid var(--border);
+  border-radius:10px;font-size:14px;background:#fff;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center}
+.dealer-bar select:focus{outline:none;border-color:var(--red)}
+
+/* Detail card */
+.detail-card{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);margin-bottom:16px}
+.detail-card h3{font-size:16px;font-weight:700;margin-bottom:16px;padding-bottom:10px;
+  border-bottom:2px solid var(--red-bg);display:flex;align-items:center;gap:8px}
+.detail-card h3 .icon{width:6px;height:20px;background:var(--red);border-radius:3px;flex-shrink:0}
+
+/* Category badge */
+.cat-flow{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.cat-badge{padding:10px 24px;border-radius:10px;font-size:15px;font-weight:700;text-align:center}
+.cat-badge.white{background:#f0f9f0;color:var(--green)}
+.cat-badge.watch{background:#FFF5E6;color:var(--orange)}
+.cat-badge.risk{background:#FFF0F0;color:var(--red)}
+.cat-arrow{font-size:20px;color:var(--text2)}
+
+/* Chart area */
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.chart-box{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);text-align:center}
+.chart-box .chart-title{font-size:14px;font-weight:700;margin-bottom:8px;color:var(--text)}
+.chart-container{width:100%;height:220px}
+
+/* Info cards */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.info-card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.info-card .info-label{font-size:12px;color:var(--text2);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.info-card .info-text{font-size:14px;line-height:1.7;color:var(--text)}
+.info-card.warn{border-left:4px solid var(--red)}
+.info-card.suggest{border-left:4px solid var(--orange)}
+
+/* Data table */
+.data-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.data-tbl th{background:var(--red-bg);color:var(--text);padding:10px 12px;font-weight:700;
+  text-align:center;border-bottom:2px solid var(--border);white-space:nowrap}
+.data-tbl td{padding:10px 12px;text-align:center;border-bottom:1px solid var(--border)}
+.data-tbl tr:hover td{background:var(--red-bg)}
+.dealer-hint{font-size:12px;color:var(--red);margin-top:6px;display:flex;align-items:center;gap:4px}
+.dealer-hint::before{content:"";display:inline-block;width:16px;height:16px;background:var(--red);border-radius:50%;
+  color:#fff;font-size:10px;text-align:center;line-height:16px;flex-shrink:0;
+  content:"\\25BC";font-size:8px}
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* List table */
+.list-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.list-tbl th{background:var(--red-bg);padding:10px 8px;font-weight:700;text-align:left;border-bottom:2px solid var(--border)}
+.list-tbl td{padding:10px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+.list-tbl tr:hover td{background:var(--red-bg)}
+.cat-tag{display:inline-block;padding:2px 10px;border-radius:6px;font-size:12px;font-weight:600}
+.cat-tag.white{background:#f0f9f0;color:var(--green)}
+.cat-tag.watch{background:#FFF5E6;color:var(--orange)}
+.cat-tag.risk{background:#FFF0F0;color:var(--red)}
+
+/* Responsive */
+@media(max-width:640px){
+  #dashboard{padding:12px}
+  .chart-row,.info-grid{grid-template-columns:1fr}
+  .summary-row{grid-template-columns:repeat(2,1fr)}
+  .landing-card{padding:32px 24px}
+  .detail-card{padding:16px}
+  .dash-header h2{font-size:18px}
+  .s-card .num{font-size:22px}
+  .cat-flow{gap:10px}
+  .cat-badge{padding:8px 16px;font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== LANDING ==================== -->
+<div id="landing">
+  <div class="landing-card">
+    <div class="landing-logo">剑</div>
+    <h1>剑南春老酒 · 降档客户明细</h1>
+    <p class="sub">请选择您的办事处和地级市，查看区域客户优化清单</p>
+    <div class="field-group">
+      <label>办事处</label>
+      <select id="selOffice"><option value="">— 请选择 —</option></select>
+    </div>
+    <div class="field-group">
+      <label>地级市</label>
+      <select id="selCity" disabled><option value="">— 请先选择办事处 —</option></select>
+    </div>
+    <button class="btn-confirm" id="btnConfirm" onclick="enterDashboard()">确认进入</button>
+  </div>
+</div>
+
+<!-- ==================== DASHBOARD ==================== -->
+<div id="dashboard" class="hidden">
+  <div class="header-wrap">
+    <div class="dash-header">
+      <button class="btn-back" onclick="goBack()">← 重新选择</button>
+      <h2 id="dashTitle">区域客户优化清单</h2>
+      <div class="area-tag" id="dashTag"></div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-row" id="summaryRow"></div>
+
+  <!-- Customer list -->
+  <div class="detail-card" id="listCard">
+    <h3><span class="icon"></span>需整改客户名单</h3>
+    <div class="tbl-scroll">
+      <table class="list-tbl" id="listTable">
+        <thead><tr><th>经销商</th><th>城市</th><th>当前分类</th><th>6月结果</th><th>动销率</th><th>开瓶率</th></tr></thead>
+        <tbody id="listBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Dealer selector -->
+  <div class="dealer-bar" style="flex-direction:column;align-items:stretch">
+    <label>选择经销商查看详情：</label>
+    <select id="selDealer" onchange="showDealerDetail()"><option value="">— 请选择 —</option></select>
+    <div class="dealer-hint">下拉可切换查看其他经销商详情</div>
+  </div>
+
+  <!-- Dealer detail (hidden until selected) -->
+  <div id="dealerDetail" class="hidden">
+    <!-- Category flow -->
+    <div class="detail-card">
+      <h3><span class="icon"></span>客户分类变动</h3>
+      <div class="cat-flow" id="catFlow"></div>
+    </div>
+
+    <!-- Gauge charts -->
+    <div class="chart-row">
+      <div class="chart-box">
+        <div class="chart-title">动销率对比</div>
+        <div class="chart-container" id="chartDx"></div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">开瓶率对比</div>
+        <div class="chart-container" id="chartKp"></div>
+      </div>
+    </div>
+
+    <!-- Suggestion + Penalty -->
+    <div class="info-grid">
+      <div class="info-card suggest">
+        <div class="info-label">优化建议</div>
+        <div class="info-text" id="infoSuggest"></div>
+      </div>
+      <div class="info-card warn">
+        <div class="info-label">到期未达标 · 执行措施</div>
+        <div class="info-text" id="infoPenalty"></div>
+      </div>
+    </div>
+
+    <!-- Data table -->
+    <div class="detail-card">
+      <h3><span class="icon"></span>订单与开瓶明细数据</h3>
+      <div class="tbl-scroll">
+        <table class="data-tbl" id="dataTable">
+          <thead>
+            <tr><th>总订单(箱)</th><th>总订单(瓶)</th><th>同城配(箱)</th><th>同城配(瓶)</th><th>总扫码(瓶)</th><th>动销率</th><th>开瓶率</th></tr>
+          </thead>
+          <tbody id="dataBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var DATA = {"records": [{"office": "山东办事处", "province": "山东省", "city": "德州", "dealer": "德州市旭日副食品有限公司", "category": "白名单", "suggestion": "6个月内动销及开瓶指标恢复白名单标准", "dxRate": 55.48, "kpRate": 24.82, "dxTarget": 60.0, "kpTarget": 30.0, "penalty": "降级为观察类", "newCategory": "观察类", "orderBox": 3383, "orderBottle": 16172, "cityBox": 1877, "cityBottle": 9408, "scanBottle": 2335}, {"office": "河南办事处", "province": "河南省", "city": "周口", "dealer": "周口市睿合酒业贸易有限公司", "category": "观察类", "suggestion": "该客户已降级，请抓紧核实客户违约情况，及时发起申诉与整改措施", "dxRate": 93.3, "kpRate": 21.92, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为观察类", "newCategory": "观察类", "orderBox": 2447, "orderBottle": 13882, "cityBox": 2283, "cityBottle": 13060, "scanBottle": 2863}, {"office": "德阳办事处", "province": "四川省", "city": "德阳", "dealer": "中江金剑红商贸有限公司", "category": "白名单", "suggestion": "6个月内动销及开瓶指标恢复白名单标准", "dxRate": 57.91, "kpRate": 28.18, "dxTarget": 60.0, "kpTarget": 30.0, "penalty": "降级为观察类", "newCategory": "观察类", "orderBox": 1176, "orderBottle": 6256, "cityBox": 681, "cityBottle": 3524, "scanBottle": 993}, {"office": "河北办事处", "province": "河北省", "city": "石家庄", "dealer": "石家庄第一糖业烟酒有限责任公司", "category": "白名单", "suggestion": "6个月内动销及开瓶指标恢复白名单标准", "dxRate": 56.33, "kpRate": 25.14, "dxTarget": 60.0, "kpTarget": 30.0, "penalty": "降级为观察类", "newCategory": "观察类", "orderBox": 316, "orderBottle": 1264, "cityBox": 178, "cityBottle": 712, "scanBottle": 179}, {"office": "福建办事处", "province": "福建省", "city": "泉州", "dealer": "福建瑞福祥实业有限责任公司", "category": "白名单", "suggestion": "6个月内动销及开瓶指标恢复白名单标准", "dxRate": 58.48, "kpRate": 21.84, "dxTarget": 60.0, "kpTarget": 30.0, "penalty": "降级为观察类", "newCategory": "观察类", "orderBox": 1250, "orderBottle": 7500, "cityBox": 731, "cityBottle": 4386, "scanBottle": 958}, {"office": "苏北办事处", "province": "江苏省", "city": "泰州", "dealer": "泰州市曹驰商贸有限公司", "category": "白名单", "suggestion": "6个月内动销及开瓶指标恢复白名单标准", "dxRate": 10.52, "kpRate": 27.59, "dxTarget": 60.0, "kpTarget": 30.0, "penalty": "降级为观察类", "newCategory": "观察类", "orderBox": 1008, "orderBottle": 4032, "cityBox": 106, "cityBottle": 424, "scanBottle": 117}, {"office": "福建办事处", "province": "福建省", "city": "泉州", "dealer": "石狮市煌楠名酒商行", "category": "白名单", "suggestion": "6个月内动销及开瓶指标恢复白名单标准", "dxRate": 48.51, "kpRate": 18.47, "dxTarget": 60.0, "kpTarget": 30.0, "penalty": "降级为观察类", "newCategory": "观察类", "orderBox": 505, "orderBottle": 2020, "cityBox": 245, "cityBottle": 980, "scanBottle": 181}, {"office": "福建办事处", "province": "福建省", "city": "厦门", "dealer": "厦门宝翼实业有限公司", "category": "白名单", "suggestion": "6个月内动销及开瓶指标恢复白名单标准", "dxRate": 58.28, "kpRate": 28.98, "dxTarget": 60.0, "kpTarget": 30.0, "penalty": "降级为观察类", "newCategory": "观察类", "orderBox": 151, "orderBottle": 604, "cityBox": 88, "cityBottle": 352, "scanBottle": 102}, {"office": "河北办事处", "province": "河北省", "city": "唐山", "dealer": "唐山吉隆商贸有限公司", "category": "白名单", "suggestion": "6个月内动销及开瓶指标恢复白名单标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 60.0, "kpTarget": 30.0, "penalty": "降级为观察类", "newCategory": "观察类", "orderBox": 4, "orderBottle": 16, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "安徽办事处", "province": "安徽省", "city": "阜阳", "dealer": "阜阳市颍州区瑞丰烟酒商行", "category": "白名单", "suggestion": "6个月内动销及开瓶指标恢复白名单标准", "dxRate": 46.83, "kpRate": 13.54, "dxTarget": 60.0, "kpTarget": 30.0, "penalty": "降级为观察类", "newCategory": "观察类", "orderBox": 205, "orderBottle": 820, "cityBox": 96, "cityBottle": 384, "scanBottle": 52}, {"office": "安徽办事处", "province": "安徽省", "city": "合肥", "dealer": "合肥冠樽商贸有限公司", "category": "白名单", "suggestion": "6个月内动销及开瓶指标恢复白名单标准", "dxRate": 40.65, "kpRate": 16.07, "dxTarget": 60.0, "kpTarget": 30.0, "penalty": "降级为观察类", "newCategory": "观察类", "orderBox": 310, "orderBottle": 1240, "cityBox": 126, "cityBottle": 504, "scanBottle": 81}, {"office": "河南办事处", "province": "河南省", "city": "周口", "dealer": "周口华富酒业有限公司", "category": "白名单", "suggestion": "6个月内动销及开瓶指标恢复白名单标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 60.0, "kpTarget": 30.0, "penalty": "降级为观察类", "newCategory": "观察类", "orderBox": 5, "orderBottle": 20, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "辽宁办事处", "province": "辽宁省", "city": "大连", "dealer": "大连市旅顺口区宇齐贸易商行", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 47.7, "kpRate": 17.93, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 304, "orderBottle": 1216, "cityBox": 145, "cityBottle": 580, "scanBottle": 104}, {"office": "苏南办事处", "province": "江苏省", "city": "无锡", "dealer": "无锡市圆和圆商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 32.94, "kpRate": 13.54, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 2058, "orderBottle": 12348, "cityBox": 678, "cityBottle": 4068, "scanBottle": 551}, {"office": "成都办事处", "province": "四川省", "city": "成都", "dealer": "都江堰市昕逸贸易有限公司", "category": "风险预警", "suggestion": "该客户已降级，请抓紧核实客户违约情况，及时发起申诉与整改措施", "dxRate": 72.26, "kpRate": 20.42, "dxTarget": 0, "kpTarget": 0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 393, "orderBottle": 1572, "cityBox": 284, "cityBottle": 1136, "scanBottle": 232}, {"office": "广东办事处", "province": "广东省", "city": "东莞", "dealer": "东莞市正嘉酒业贸易有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 47.37, "kpRate": 5.9, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 152, "orderBottle": 608, "cityBox": 72, "cityBottle": 288, "scanBottle": 17}, {"office": "陕西办事处", "province": "陕西省", "city": "铜川", "dealer": "铜川茅五剑商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 1.11, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 45, "orderBottle": 180, "cityBox": 0, "cityBottle": 0, "scanBottle": 2}, {"office": "河北办事处", "province": "河北省", "city": "石家庄", "dealer": "河北弘和贸易有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 44.57, "kpRate": 13.7, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 258, "orderBottle": 1032, "cityBox": 115, "cityBottle": 460, "scanBottle": 63}, {"office": "陕西办事处", "province": "陕西省", "city": "西安", "dealer": "陕西融通军民服务社有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 36.03, "kpRate": 8.57, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 1274, "orderBottle": 7584, "cityBox": 459, "cityBottle": 2754, "scanBottle": 236}, {"office": "成都办事处", "province": "四川省", "city": "成都", "dealer": "成都德鸿巨酒业有限责任公司", "category": "风险预警", "suggestion": "该客户已降级，请抓紧核实客户违约情况，及时发起申诉与整改措施", "dxRate": 78.39, "kpRate": 18.78, "dxTarget": 0, "kpTarget": 0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 236, "orderBottle": 944, "cityBox": 185, "cityBottle": 740, "scanBottle": 139}, {"office": "安徽办事处", "province": "安徽省", "city": "芜湖", "dealer": "芜湖安得智联科技有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 70, "orderBottle": 296, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "苏北办事处", "province": "江苏省", "city": "镇江", "dealer": "丹阳市上联烟酒贸易有限公司", "category": "风险预警", "suggestion": "该客户已降级，请抓紧核实客户违约情况，及时发起申诉与整改措施", "dxRate": 83.5, "kpRate": 26.11, "dxTarget": 0, "kpTarget": 0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 1218, "orderBottle": 4872, "cityBox": 1017, "cityBottle": 4068, "scanBottle": 1062}, {"office": "江西办事处", "province": "江西省", "city": "赣州", "dealer": "赣州金易酒业有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 1, "orderBottle": 4, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "广东办事处", "province": "广东省", "city": "广州", "dealer": "广州市荔湾区银致酒业经销部", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 3, "orderBottle": 12, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "晋蒙办事处", "province": "山西省", "city": "太原", "dealer": "山西酒洲贸易有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 45.92, "kpRate": 17.96, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 588, "orderBottle": 2352, "cityBox": 270, "cityBottle": 1080, "scanBottle": 194}, {"office": "成都办事处", "province": "四川省", "city": "成都", "dealer": "成都桐楠格商贸有限公司", "category": "风险预警", "suggestion": "该客户已降级，请抓紧核实客户违约情况，及时发起申诉与整改措施", "dxRate": 69.57, "kpRate": 18.04, "dxTarget": 0, "kpTarget": 0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 470, "orderBottle": 1880, "cityBox": 327, "cityBottle": 1308, "scanBottle": 236}, {"office": "河南办事处", "province": "河南省", "city": "驻马店", "dealer": "驻马店市鸿盛达商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 40.29, "kpRate": 11.67, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 1241, "orderBottle": 7446, "cityBox": 500, "cityBottle": 3000, "scanBottle": 350}, {"office": "重庆办事处", "province": "重庆市", "city": "重庆辖区", "dealer": "重庆市南川区典酱副食品经营部", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 18.62, "kpRate": 12.96, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 145, "orderBottle": 580, "cityBox": 27, "cityBottle": 108, "scanBottle": 14}, {"office": "浙江办事处", "province": "浙江省", "city": "丽水", "dealer": "丽水市金叶商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 46.65, "kpRate": 15.29, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 403, "orderBottle": 1612, "cityBox": 188, "cityBottle": 752, "scanBottle": 115}, {"office": "陕西办事处", "province": "陕西省", "city": "榆林", "dealer": "榆林兴晟坊商贸有限责任公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 37.82, "kpRate": 10.84, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 1232, "orderBottle": 7392, "cityBox": 466, "cityBottle": 2796, "scanBottle": 303}, {"office": "晋蒙办事处", "province": "内蒙古", "city": "乌海", "dealer": "乌海市星宇商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 1, "orderBottle": 4, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "河北办事处", "province": "河北省", "city": "张家口", "dealer": "张家口市糖酒副食有限责任公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 1, "orderBottle": 4, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "陕西办事处", "province": "陕西省", "city": "西安", "dealer": "西安市西糖烟酒连锁超市有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 11.76, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 17, "orderBottle": 68, "cityBox": 0, "cityBottle": 0, "scanBottle": 8}, {"office": "西北办事处", "province": "甘肃省", "city": "张掖", "dealer": "张掖市融华酒业销售有限责任公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 10.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 10, "orderBottle": 40, "cityBox": 0, "cityBottle": 0, "scanBottle": 4}, {"office": "晋蒙办事处", "province": "内蒙古", "city": "呼和浩特", "dealer": "呼和浩特市通禄商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 1, "orderBottle": 4, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "黑吉办事处", "province": "吉林省", "city": "长春", "dealer": "南关区全望酒品经销处", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 10, "orderBottle": 40, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "山东办事处", "province": "山东省", "city": "临沂", "dealer": "临沂市锦庄酒行", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 5.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 5, "orderBottle": 20, "cityBox": 0, "cityBottle": 0, "scanBottle": 1}, {"office": "山东办事处", "province": "山东省", "city": "烟台", "dealer": "招远市正盛酒业经营部", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 0, "orderBottle": 0, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "辽宁办事处", "province": "辽宁省", "city": "朝阳", "dealer": "朝阳鸿运商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 8, "orderBottle": 32, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "成都办事处", "province": "四川省", "city": "成都", "dealer": "四川祯朗逸商贸有限公司", "category": "风险预警", "suggestion": "该客户已降级，请抓紧核实客户违约情况，及时发起申诉与整改措施", "dxRate": 96.0, "kpRate": 8.33, "dxTarget": 0, "kpTarget": 0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 50, "orderBottle": 200, "cityBox": 48, "cityBottle": 192, "scanBottle": 16}, {"office": "江西办事处", "province": "江西省", "city": "赣州", "dealer": "赣州列奇商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 44.44, "kpRate": 14.9, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 234, "orderBottle": 936, "cityBox": 104, "cityBottle": 416, "scanBottle": 62}, {"office": "福建办事处", "province": "福建省", "city": "龙岩", "dealer": "龙岩唐记商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 8.33, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 9, "orderBottle": 36, "cityBox": 0, "cityBottle": 0, "scanBottle": 3}, {"office": "广东办事处", "province": "广东省", "city": "珠海", "dealer": "珠海市硕阳贸易有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 45.0, "kpRate": 9.03, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 80, "orderBottle": 320, "cityBox": 36, "cityBottle": 144, "scanBottle": 13}, {"office": "河南办事处", "province": "河南省", "city": "许昌", "dealer": "许昌市胖东来超市有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 11.67, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 30, "orderBottle": 120, "cityBox": 0, "cityBottle": 0, "scanBottle": 14}, {"office": "浙江办事处", "province": "浙江省", "city": "杭州", "dealer": "杭州雅源食品有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 35.39, "kpRate": 17.25, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 647, "orderBottle": 3882, "cityBox": 229, "cityBottle": 1374, "scanBottle": 237}, {"office": "北京办事处", "province": "北京市", "city": "北京辖区", "dealer": "北京夏都顺祥糖酒商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 47.0, "kpRate": 11.44, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 200, "orderBottle": 800, "cityBox": 94, "cityBottle": 376, "scanBottle": 43}, {"office": "苏南办事处", "province": "江苏省", "city": "无锡", "dealer": "宜兴市盛润和副食商行", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 2.5, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 10, "orderBottle": 40, "cityBox": 0, "cityBottle": 0, "scanBottle": 1}, {"office": "辽宁办事处", "province": "辽宁省", "city": "朝阳", "dealer": "喀左鑫锋商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 1.79, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 42, "orderBottle": 168, "cityBox": 0, "cityBottle": 0, "scanBottle": 3}, {"office": "山东办事处", "province": "山东省", "city": "济宁", "dealer": "济宁市秀强商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 30.0, "kpRate": 5.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 200, "orderBottle": 800, "cityBox": 60, "cityBottle": 240, "scanBottle": 12}, {"office": "河北办事处", "province": "河北省", "city": "邢台", "dealer": "邢台市万坊商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 60, "orderBottle": 240, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "福建办事处", "province": "福建省", "city": "厦门", "dealer": "厦门春之盛典贸易有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 5, "orderBottle": 20, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "浙江办事处", "province": "浙江省", "city": "杭州", "dealer": "杭州成元贸易有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 10, "orderBottle": 40, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "辽宁办事处", "province": "辽宁省", "city": "朝阳", "dealer": "朝阳九鼎商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 2.5, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 10, "orderBottle": 40, "cityBox": 0, "cityBottle": 0, "scanBottle": 1}, {"office": "辽宁办事处", "province": "辽宁省", "city": "朝阳", "dealer": "凌源市新东方名酒总行", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 5, "orderBottle": 20, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "德阳办事处", "province": "四川省", "city": "德阳", "dealer": "四川华和顺商贸有限责任公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 10.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 5, "orderBottle": 20, "cityBox": 0, "cityBottle": 0, "scanBottle": 2}, {"office": "河南办事处", "province": "河南省", "city": "郑州", "dealer": "巩义市博大商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 48.0, "kpRate": 11.46, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 150, "orderBottle": 600, "cityBox": 72, "cityBottle": 288, "scanBottle": 33}, {"office": "福建办事处", "province": "福建省", "city": "厦门", "dealer": "厦门叁众传媒有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 16.67, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 9, "orderBottle": 36, "cityBox": 0, "cityBottle": 0, "scanBottle": 6}, {"office": "成都办事处", "province": "四川省", "city": "成都", "dealer": "成都市温江浓香金典酒水商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 47.62, "kpRate": 19.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 210, "orderBottle": 840, "cityBox": 100, "cityBottle": 400, "scanBottle": 76}, {"office": "河北办事处", "province": "河北省", "city": "承德", "dealer": "围场满族蒙古族自治县鑫达商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 37.0, "kpRate": 17.43, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 500, "orderBottle": 2000, "cityBox": 185, "cityBottle": 740, "scanBottle": 129}, {"office": "苏北办事处", "province": "江苏省", "city": "扬州", "dealer": "高邮市旭日商场", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 40.06, "kpRate": 18.51, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 327, "orderBottle": 1308, "cityBox": 131, "cityBottle": 524, "scanBottle": 97}, {"office": "河南办事处", "province": "河南省", "city": "信阳", "dealer": "信阳市副食品销售有限责任公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 1, "orderBottle": 4, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "山东办事处", "province": "山东省", "city": "临沂", "dealer": "山东九州商业集团有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 5.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 5, "orderBottle": 20, "cityBox": 0, "cityBottle": 0, "scanBottle": 1}, {"office": "广东办事处", "province": "广东省", "city": "茂名", "dealer": "茂名市粮基贸易有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 5, "orderBottle": 20, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "湖北办事处", "province": "湖北省", "city": "十堰", "dealer": "十堰冯氏商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 5, "orderBottle": 20, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "山东办事处", "province": "山东省", "city": "菏泽", "dealer": "曹县冠存酒水有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 10, "orderBottle": 40, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "苏南办事处", "province": "江苏省", "city": "南通", "dealer": "启东市金茂酒业商行", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 2, "orderBottle": 8, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "晋蒙办事处", "province": "内蒙古", "city": "呼和浩特", "dealer": "内蒙古蒙糖商贸有限责任公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 17.5, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 10, "orderBottle": 40, "cityBox": 0, "cityBottle": 0, "scanBottle": 7}, {"office": "陕西办事处", "province": "陕西省", "city": "汉中", "dealer": "汉中惠康商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 17.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 50, "orderBottle": 200, "cityBox": 0, "cityBottle": 0, "scanBottle": 34}, {"office": "上海办事处", "province": "上海市", "city": "上海辖区", "dealer": "上海芗江贸易有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 10, "orderBottle": 40, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "河南办事处", "province": "河南省", "city": "许昌", "dealer": "许昌魏文商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 9.17, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 30, "orderBottle": 120, "cityBox": 0, "cityBottle": 0, "scanBottle": 11}, {"office": "西北办事处", "province": "青海省", "city": "西宁", "dealer": "青海八坊青稞酒酒业有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 1, "orderBottle": 4, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "广东办事处", "province": "广东省", "city": "佛山", "dealer": "佛山市瑞醇酒业有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 5.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 5, "orderBottle": 20, "cityBox": 0, "cityBottle": 0, "scanBottle": 1}, {"office": "川南办事处", "province": "四川省", "city": "资阳", "dealer": "资阳市众顺源商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 5, "orderBottle": 20, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "浙江办事处", "province": "浙江省", "city": "杭州", "dealer": "杭州华商糖业烟酒有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 10, "orderBottle": 40, "cityBox": 0, "cityBottle": 0, "scanBottle": 0}, {"office": "安徽办事处", "province": "安徽省", "city": "合肥", "dealer": "安徽正昭商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 0.0, "kpRate": 5.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 5, "orderBottle": 20, "cityBox": 0, "cityBottle": 0, "scanBottle": 1}, {"office": "川南办事处", "province": "四川省", "city": "凉山彝族", "dealer": "凉山州百海联赢商贸有限公司", "category": "观察类", "suggestion": "6个月内动销及开瓶指标恢复观察类标准", "dxRate": 2.43, "kpRate": 0.0, "dxTarget": 50.0, "kpTarget": 20.0, "penalty": "降级为风险预警类", "newCategory": "风险预警", "orderBox": 329, "orderBottle": 0, "cityBox": 8, "cityBottle": 48, "scanBottle": 0}], "officeCity": {"上海办事处": ["上海辖区"], "北京办事处": ["北京辖区"], "安徽办事处": ["合肥", "芜湖", "阜阳"], "山东办事处": ["临沂", "德州", "济宁", "烟台", "菏泽"], "川南办事处": ["凉山彝族", "资阳"], "广东办事处": ["东莞", "佛山", "广州", "珠海", "茂名"], "德阳办事处": ["德阳"], "成都办事处": ["成都"], "晋蒙办事处": ["乌海", "呼和浩特", "太原"], "江西办事处": ["赣州"], "河北办事处": ["唐山", "张家口", "承德", "石家庄", "邢台"], "河南办事处": ["信阳", "周口", "许昌", "郑州", "驻马店"], "浙江办事处": ["丽水", "杭州"], "湖北办事处": ["十堰"], "福建办事处": ["厦门", "泉州", "龙岩"], "苏北办事处": ["扬州", "泰州", "镇江"], "苏南办事处": ["南通", "无锡"], "西北办事处": ["张掖", "西宁"], "辽宁办事处": ["大连", "朝阳"], "重庆办事处": ["重庆辖区"], "陕西办事处": ["榆林", "汉中", "西安", "铜川"], "黑吉办事处": ["长春"]}, "totalRecords": 76};
+
+var selOffice = document.getElementById('selOffice');
+var selCity = document.getElementById('selCity');
+var currentRecords = [];
+
+// Populate offices
+Object.keys(DATA.officeCity).forEach(function(office) {
+  var opt = document.createElement('option');
+  opt.value = office;
+  opt.textContent = office;
+  selOffice.appendChild(opt);
+});
+
+selOffice.addEventListener('change', function() {
+  var office = this.value;
+  selCity.innerHTML = '<option value="">— 请选择 —</option>';
+  if (office && DATA.officeCity[office]) {
+    selCity.disabled = false;
+    DATA.officeCity[office].forEach(function(city) {
+      var opt = document.createElement('option');
+      opt.value = city;
+      opt.textContent = city;
+      selCity.appendChild(opt);
+    });
+  } else {
+    selCity.disabled = true;
+  }
+});
+
+function catClass(cat) {
+  if (cat.indexOf('\u767d\u540d') >= 0) return 'white';
+  if (cat.indexOf('\u89c2\u5bdf') >= 0) return 'watch';
+  return 'risk';
+}
+
+function enterDashboard() {
+  var office = selOffice.value;
+  var city = selCity.value;
+  if (!office) { alert('\u8bf7\u9009\u62e9\u529e\u4e8b\u5904'); return; }
+  // If no city selected, show all records for the office
+  currentRecords = DATA.records.filter(function(r) {
+    if (city) return r.office === office && r.city === city;
+    return r.office === office;
+  });
+  if (currentRecords.length === 0) { alert('\u8be5\u533a\u57df\u6682\u65e0\u964d\u6863\u5ba2\u6237\u6570\u636e'); return; }
+
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('dashboard').classList.remove('hidden');
+
+  var areaText = city ? (office + ' · ' + city) : office;
+  document.getElementById('dashTitle').textContent = '\u964d\u6863\u5ba2\u6237\u4f18\u5316\u6e05\u5355';
+  document.getElementById('dashTag').textContent = areaText + ' | \u5171' + currentRecords.length + '\u4f4d\u5ba2\u6237\u9700\u6574\u6539';
+
+  renderSummary();
+  renderList();
+  renderDealerSelector();
+}
+
+function goBack() {
+  document.getElementById('dashboard').classList.add('hidden');
+  document.getElementById('landing').classList.remove('hidden');
+  document.getElementById('dealerDetail').classList.add('hidden');
+}
+
+function renderSummary() {
+  var total = currentRecords.length;
+  var cats = {'\u767d\u540d\u5355': 0, '\u89c2\u5bdf\u7c7b': 0, '\u98ce\u9669\u9884\u8b66': 0};
+  currentRecords.forEach(function(r) { if (cats.hasOwnProperty(r.category)) cats[r.category]++; });
+
+  var html = '<div class="s-card"><div class="num">' + total + '</div><div class="lbl">\u9700\u6574\u6539\u5ba2\u6237</div></div>';
+  html += '<div class="s-card green"><div class="num">' + cats['\u767d\u540d\u5355'] + '</div><div class="lbl">\u767d\u540d\u5355</div></div>';
+  html += '<div class="s-card orange"><div class="num">' + cats['\u89c2\u5bdf\u7c7b'] + '</div><div class="lbl">\u89c2\u5bdf\u7c7b</div></div>';
+  html += '<div class="s-card" style=""><div class="num" style="color:var(--red)">' + cats['\u98ce\u9669\u9884\u8b66'] + '</div><div class="lbl">\u98ce\u9669\u9884\u8b66</div></div>';
+  document.getElementById('summaryRow').innerHTML = html;
+}
+
+function renderList() {
+  var html = '';
+  currentRecords.forEach(function(r) {
+    html += '<tr>';
+    html += '<td style="font-weight:600">' + r.dealer + '</td>';
+    html += '<td>' + r.city + '</td>';
+    html += '<td><span class="cat-tag ' + catClass(r.category) + '">' + r.category + '</span></td>';
+    html += '<td><span class="cat-tag ' + catClass(r.newCategory) + '">' + r.newCategory + '</span></td>';
+    html += '<td>' + r.dxRate.toFixed(1) + '%</td>';
+    html += '<td>' + r.kpRate.toFixed(1) + '%</td>';
+    html += '</tr>';
+  });
+  document.getElementById('listBody').innerHTML = html;
+}
+
+function renderDealerSelector() {
+  var sel = document.getElementById('selDealer');
+  sel.innerHTML = '';
+  currentRecords.forEach(function(r, i) {
+    var opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = r.dealer + '\uff08' + r.city + '\uff09';
+    sel.appendChild(opt);
+  });
+  // Auto-select first dealer
+  if (currentRecords.length > 0) {
+    sel.value = '0';
+    showDealerDetail();
+  } else {
+    document.getElementById('dealerDetail').classList.add('hidden');
+  }
+}
+
+var chartDx = null, chartKp = null;
+
+function showDealerDetail() {
+  var idx = document.getElementById('selDealer').value;
+  if (idx === '') { document.getElementById('dealerDetail').classList.add('hidden'); return; }
+  var r = currentRecords[parseInt(idx)];
+  document.getElementById('dealerDetail').classList.remove('hidden');
+
+  // Category flow
+  var cfHtml = '<div class="cat-badge ' + catClass(r.category) + '">\u5f53\u524d\uff1a' + r.category + '</div>';
+  cfHtml += '<div class="cat-arrow">\u2192</div>';
+  cfHtml += '<div class="cat-badge ' + catClass(r.newCategory) + '">6\u6708\u540e\uff1a' + r.newCategory + '</div>';
+  document.getElementById('catFlow').innerHTML = cfHtml;
+
+  // Info cards
+  document.getElementById('infoSuggest').textContent = r.suggestion || '\u6682\u65e0';
+  document.getElementById('infoPenalty').textContent = r.penalty || '\u6682\u65e0';
+
+  // Data table
+  var tbody = '<tr>';
+  tbody += '<td>' + r.orderBox.toLocaleString() + '</td>';
+  tbody += '<td>' + r.orderBottle.toLocaleString() + '</td>';
+  tbody += '<td>' + r.cityBox.toLocaleString() + '</td>';
+  tbody += '<td>' + r.cityBottle.toLocaleString() + '</td>';
+  tbody += '<td>' + r.scanBottle.toLocaleString() + '</td>';
+  tbody += '<td style="font-weight:700;color:' + (r.dxRate >= r.dxTarget ? 'var(--green)' : 'var(--red)') + '">' + r.dxRate.toFixed(2) + '%</td>';
+  tbody += '<td style="font-weight:700;color:' + (r.kpRate >= r.kpTarget ? 'var(--green)' : 'var(--red)') + '">' + r.kpRate.toFixed(2) + '%</td>';
+  tbody += '</tr>';
+  document.getElementById('dataBody').innerHTML = tbody;
+
+  // Charts
+  renderGauges(r);
+
+  // Scroll to detail
+  setTimeout(function() {
+    document.getElementById('dealerDetail').scrollIntoView({behavior: 'smooth', block: 'start'});
+  }, 100);
+}
+
+function renderGauges(r) {
+  // Dispose old charts
+  if (chartDx) chartDx.dispose();
+  if (chartKp) chartKp.dispose();
+
+  chartDx = echarts.init(document.getElementById('chartDx'));
+  chartKp = echarts.init(document.getElementById('chartKp'));
+
+  function gaugeOpt(title, current, target) {
+    var passed = current >= target;
+    return {
+      series: [
+        {
+          type: 'gauge', startAngle: 200, endAngle: -20, min: 0, max: 100,
+          splitNumber: 5, center: ['50%', '60%'], radius: '90%',
+          itemStyle: { color: passed ? '#2E8B57' : '#C41A1A' },
+          progress: { show: true, roundCap: true, width: 14 },
+          pointer: { show: false },
+          axisLine: { roundCap: true, lineStyle: { width: 14, color: [[1, '#E8E4DF']] } },
+          axisTick: { show: false },
+          splitLine: { show: false },
+          axisLabel: { show: false },
+          title: { show: true, offsetCenter: [0, '30%'], fontSize: 13, color: '#666' },
+          detail: {
+            valueAnimation: true, offsetCenter: [0, '-5%'],
+            fontSize: 26, fontWeight: 800,
+            formatter: function(v) { return v.toFixed(1) + '%'; },
+            color: passed ? '#2E8B57' : '#C41A1A'
+          },
+          data: [{ value: current, name: '\u5f53\u524d ' + current.toFixed(1) + '%  |  \u76ee\u6807 ' + target.toFixed(0) + '%' }]
+        }
+      ]
+    };
+  }
+
+  chartDx.setOption(gaugeOpt('\u52a8\u9500\u7387', r.dxRate, r.dxTarget));
+  chartKp.setOption(gaugeOpt('\u5f00\u74f6\u7387', r.kpRate, r.kpTarget));
+}
+
+// Resize charts on window resize
+window.addEventListener('resize', function() {
+  if (chartDx) chartDx.resize();
+  if (chartKp) chartKp.resize();
+});
+</script>
+</body>
+</html>
