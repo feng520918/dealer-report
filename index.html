@@ -127,17 +127,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 .cat-tag.watch{background:#FFF5E6;color:var(--orange)}
 .cat-tag.risk{background:#FFF0F0;color:var(--red)}
 
+/* Metric grid for data cards */
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.metric-item{background:var(--red-bg);border-radius:10px;padding:14px 10px;text-align:center}
+.metric-item .m-val{font-size:20px;font-weight:800;color:var(--text);margin-bottom:2px}
+.metric-item .m-lbl{font-size:11px;color:var(--text2);white-space:nowrap}
+.metric-item.highlight{background:linear-gradient(135deg,rgba(196,26,26,.08),rgba(232,86,58,.08))}
+.metric-item.highlight .m-val{color:var(--red)}
+
 /* Responsive */
 @media(max-width:640px){
   #dashboard{padding:12px}
   .chart-row,.info-grid{grid-template-columns:1fr}
-  .summary-row{grid-template-columns:repeat(2,1fr)}
   .landing-card{padding:32px 24px}
   .detail-card{padding:16px}
   .dash-header h2{font-size:18px}
-  .s-card .num{font-size:22px}
   .cat-flow{gap:10px}
   .cat-badge{padding:8px 16px;font-size:13px}
+  .metric-grid{grid-template-columns:repeat(3,1fr);gap:8px}
+  .metric-item{padding:12px 6px}
+  .metric-item .m-val{font-size:17px}
+  .metric-item .m-lbl{font-size:10px}
+  .list-tbl{font-size:12px}
+  .list-tbl th,.list-tbl td{padding:8px 4px}
 }
 </style>
 </head>
@@ -171,15 +183,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
     </div>
   </div>
 
-  <!-- Summary -->
-  <div class="summary-row" id="summaryRow"></div>
-
   <!-- Customer list -->
   <div class="detail-card" id="listCard">
     <h3><span class="icon"></span>需整改客户名单</h3>
     <div class="tbl-scroll">
       <table class="list-tbl" id="listTable">
-        <thead><tr><th>经销商</th><th>城市</th><th>当前分类</th><th>6月结果</th><th>动销率</th><th>开瓶率</th></tr></thead>
+        <thead><tr><th>经销商</th><th>城市</th><th>当前分类</th><th>6个月后拟调整分类</th><th>当前动销率</th><th>当前开瓶率</th></tr></thead>
         <tbody id="listBody"></tbody>
       </table>
     </div>
@@ -224,17 +233,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
       </div>
     </div>
 
-    <!-- Data table -->
+    <!-- Data cards -->
     <div class="detail-card">
       <h3><span class="icon"></span>订单与开瓶明细数据</h3>
-      <div class="tbl-scroll">
-        <table class="data-tbl" id="dataTable">
-          <thead>
-            <tr><th>总订单(箱)</th><th>总订单(瓶)</th><th>同城配(箱)</th><th>同城配(瓶)</th><th>总扫码(瓶)</th><th>动销率</th><th>开瓶率</th></tr>
-          </thead>
-          <tbody id="dataBody"></tbody>
-        </table>
-      </div>
+      <div class="metric-grid" id="metricGrid"></div>
     </div>
   </div>
 </div>
@@ -294,7 +296,6 @@ function enterDashboard() {
   document.getElementById('dashTitle').textContent = '\u964d\u6863\u5ba2\u6237\u4f18\u5316\u6e05\u5355';
   document.getElementById('dashTag').textContent = areaText + ' | \u5171' + currentRecords.length + '\u4f4d\u5ba2\u6237\u9700\u6574\u6539';
 
-  renderSummary();
   renderList();
   renderDealerSelector();
 }
@@ -303,18 +304,6 @@ function goBack() {
   document.getElementById('dashboard').classList.add('hidden');
   document.getElementById('landing').classList.remove('hidden');
   document.getElementById('dealerDetail').classList.add('hidden');
-}
-
-function renderSummary() {
-  var total = currentRecords.length;
-  var cats = {'\u767d\u540d\u5355': 0, '\u89c2\u5bdf\u7c7b': 0, '\u98ce\u9669\u9884\u8b66': 0};
-  currentRecords.forEach(function(r) { if (cats.hasOwnProperty(r.category)) cats[r.category]++; });
-
-  var html = '<div class="s-card"><div class="num">' + total + '</div><div class="lbl">\u9700\u6574\u6539\u5ba2\u6237</div></div>';
-  html += '<div class="s-card green"><div class="num">' + cats['\u767d\u540d\u5355'] + '</div><div class="lbl">\u767d\u540d\u5355</div></div>';
-  html += '<div class="s-card orange"><div class="num">' + cats['\u89c2\u5bdf\u7c7b'] + '</div><div class="lbl">\u89c2\u5bdf\u7c7b</div></div>';
-  html += '<div class="s-card" style=""><div class="num" style="color:var(--red)">' + cats['\u98ce\u9669\u9884\u8b66'] + '</div><div class="lbl">\u98ce\u9669\u9884\u8b66</div></div>';
-  document.getElementById('summaryRow').innerHTML = html;
 }
 
 function renderList() {
@@ -361,24 +350,25 @@ function showDealerDetail() {
   // Category flow
   var cfHtml = '<div class="cat-badge ' + catClass(r.category) + '">\u5f53\u524d\uff1a' + r.category + '</div>';
   cfHtml += '<div class="cat-arrow">\u2192</div>';
-  cfHtml += '<div class="cat-badge ' + catClass(r.newCategory) + '">6\u6708\u540e\uff1a' + r.newCategory + '</div>';
+  cfHtml += '<div class="cat-badge ' + catClass(r.newCategory) + '">6\u4e2a\u6708\u540e\uff1a' + r.newCategory + '</div>';
   document.getElementById('catFlow').innerHTML = cfHtml;
 
   // Info cards
   document.getElementById('infoSuggest').textContent = r.suggestion || '\u6682\u65e0';
   document.getElementById('infoPenalty').textContent = r.penalty || '\u6682\u65e0';
 
-  // Data table
-  var tbody = '<tr>';
-  tbody += '<td>' + r.orderBox.toLocaleString() + '</td>';
-  tbody += '<td>' + r.orderBottle.toLocaleString() + '</td>';
-  tbody += '<td>' + r.cityBox.toLocaleString() + '</td>';
-  tbody += '<td>' + r.cityBottle.toLocaleString() + '</td>';
-  tbody += '<td>' + r.scanBottle.toLocaleString() + '</td>';
-  tbody += '<td style="font-weight:700;color:' + (r.dxRate >= r.dxTarget ? 'var(--green)' : 'var(--red)') + '">' + r.dxRate.toFixed(2) + '%</td>';
-  tbody += '<td style="font-weight:700;color:' + (r.kpRate >= r.kpTarget ? 'var(--green)' : 'var(--red)') + '">' + r.kpRate.toFixed(2) + '%</td>';
-  tbody += '</tr>';
-  document.getElementById('dataBody').innerHTML = tbody;
+  // Data metric cards
+  var dxColor = r.dxRate >= r.dxTarget ? 'var(--green)' : 'var(--red)';
+  var kpColor = r.kpRate >= r.kpTarget ? 'var(--green)' : 'var(--red)';
+  var mg = '';
+  mg += '<div class="metric-item"><div class="m-val">' + r.orderBox.toLocaleString() + '</div><div class="m-lbl">总订单(箱)</div></div>';
+  mg += '<div class="metric-item"><div class="m-val">' + r.orderBottle.toLocaleString() + '</div><div class="m-lbl">总订单(瓶)</div></div>';
+  mg += '<div class="metric-item"><div class="m-val">' + r.cityBox.toLocaleString() + '</div><div class="m-lbl">同城配(箱)</div></div>';
+  mg += '<div class="metric-item"><div class="m-val">' + r.cityBottle.toLocaleString() + '</div><div class="m-lbl">同城配(瓶)</div></div>';
+  mg += '<div class="metric-item"><div class="m-val">' + r.scanBottle.toLocaleString() + '</div><div class="m-lbl">总扫码(瓶)</div></div>';
+  mg += '<div class="metric-item highlight"><div class="m-val" style="color:' + dxColor + '">' + r.dxRate.toFixed(2) + '%</div><div class="m-lbl">动销率</div></div>';
+  mg += '<div class="metric-item highlight"><div class="m-val" style="color:' + kpColor + '">' + r.kpRate.toFixed(2) + '%</div><div class="m-lbl">开瓶率</div></div>';
+  document.getElementById('metricGrid').innerHTML = mg;
 
   // Charts
   renderGauges(r);
